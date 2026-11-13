@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="microscope_office_mvp.Workbench">
+        <main class="o_mops_workbench" t-att-aria-busy="this.state.loading ? 'true' : 'false'">
+            <div class="o_mops_workbench_content">
+                <header class="o_mops_workbench_header">
+                    <div>
+                        <h1>工作加速</h1>
+                        <p>先处理需要关注的事项，接着完成报价与会议里的工作。</p>
+                    </div>
+                    <button type="button" class="btn btn-outline-secondary" t-on-click="this.loadOverview"
+                        t-att-disabled="this.state.loading || this.state.opening">
+                        <t t-if="this.state.loading">正在读取…</t>
+                        <t t-else="">刷新事项</t>
+                    </button>
+                </header>
+
+                <aside class="o_mops_demo_note" aria-label="整理方式">
+                    <strong>当前配置</strong>
+                    <span t-if="this.state.overview?.adapter_label" class="o_mops_adapter_label"
+                        t-out="this.state.overview.adapter_label"/>
+                    <span>演示材料为模拟数据；缺项和不确定信息保留供你核对。</span>
+                </aside>
+
+                <div t-if="this.state.loadError" class="o_mops_workbench_error" role="alert">
+                    <div>
+                        <strong>事项读取失败</strong>
+                        <p t-if="this.state.overview">仍显示上次读取的内容。检查连接后重试，也可直接打开已有事项。</p>
+                        <p t-else="">检查连接后重试。也可从办公菜单继续处理会议、任务与公告。</p>
+                    </div>
+                    <button type="button" class="btn btn-outline-primary" t-on-click="this.loadOverview"
+                        t-att-disabled="this.state.loading">重新读取</button>
+                </div>
+                <p t-if="this.state.loading" class="o_mops_workbench_loading" role="status">正在读取你的工作事项…</p>
+                <div t-if="this.state.failedAction" class="o_mops_workbench_error" role="alert">
+                    <div>
+                        <strong>未能打开“<t t-out="this.state.failedTitle"/>”</strong>
+                        <p>请检查连接后重试；若记录已变更或不可访问，请刷新事项。</p>
+                    </div>
+                    <button type="button" class="btn btn-outline-primary" t-on-click="this.retryAction"
+                        t-att-disabled="this.state.opening">重试打开</button>
+                </div>
+                <p t-if="this.state.opening" class="o_mops_workbench_loading" role="status">正在打开工作记录…</p>
+
+                <t t-if="this.state.overview">
+                    <section t-if="this.primaryShortcuts.length" class="o_mops_workflows" aria-label="报价与会议工作入口">
+                        <article t-foreach="this.primaryShortcuts" t-as="shortcut" t-key="shortcut.key"
+                            class="o_mops_workflow">
+                            <div>
+                                <h2 t-out="shortcut.title"/>
+                                <p t-out="shortcut.description"/>
+                            </div>
+                            <button type="button" class="btn btn-primary"
+                                t-on-click="() => this.openAction(shortcut.action, shortcut.title)"
+                                t-att-disabled="this.state.opening">
+                                <t t-if="shortcut.key === 'quote'">打开报价准备</t>
+                                <t t-else="">打开会议与行动项</t>
+                            </button>
+                        </article>
+                    </section>
+
+                    <section class="o_mops_work_items" aria-labelledby="mops_work_items_heading">
+                        <header class="o_mops_section_header">
+                            <h2 id="mops_work_items_heading">接着处理</h2>
+                            <p>在原记录里检查、修改和继续。</p>
+                        </header>
+                        <t t-if="this.cards.length">
+                            <div class="o_mops_work_cards">
+                                <t t-foreach="this.cards.slice(0, 5)" t-as="card" t-key="card.id">
+                                    <t t-call="microscope_office_mvp.WorkbenchCard"/>
+                                </t>
+                            </div>
+                            <details t-if="this.cards.length > 5" class="o_mops_more_items">
+                                <summary>查看其余事项（<t t-out="this.cards.length - 5"/>）</summary>
+                                <div class="o_mops_work_cards">
+                                    <t t-foreach="this.cards.slice(5)" t-as="card" t-key="card.id">
+                                        <t t-call="microscope_office_mvp.WorkbenchCard"/>
+                                    </t>
+                                </div>
+                            </details>
+                        </t>
+                        <div t-else="" class="o_mops_workbench_empty">
+                            <h3>暂时没有需要接续的事项</h3>
+                            <p t-out="this.state.overview.empty_message || '从上方打开报价准备或会议，继续整理已有材料。'"/>
+                        </div>
+                    </section>
+
+                    <nav t-if="this.otherShortcuts.length" class="o_mops_other_actions" aria-label="其他工作入口">
+                        <h2>其他工作</h2>
+                        <div class="o_mops_other_actions_list">
+                            <div t-foreach="this.otherShortcuts" t-as="shortcut" t-key="shortcut.key">
+                                <button type="button" class="btn btn-outline-secondary"
+                                    t-on-click="() => this.openAction(shortcut.action, shortcut.title)"
+                                    t-att-disabled="this.state.opening" t-out="shortcut.title"/>
+                                <p t-if="shortcut.description" t-out="shortcut.description"/>
+                            </div>
+                        </div>
+                    </nav>
+                </t>
+            </div>
+        </main>
+    </t>
+
+    <t t-name="microscope_office_mvp.WorkbenchCard">
+        <article class="o_mops_work_card" t-att-class="{'o_mops_work_card_attention': card.priority === 'warning'}">
+            <div class="o_mops_work_card_body">
+                <div class="o_mops_work_card_heading">
+                    <h3 t-out="card.title"/>
+                    <span class="o_mops_work_card_status" t-out="card.status"/>
+                </div>
+                <p class="o_mops_work_card_reason">
+                    <strong t-if="card.priority === 'warning'" class="o_mops_attention_label">需关注：</strong>
+                    <t t-out="card.reason"/>
+                </p>
+                <details t-if="card.source" class="o_mops_work_card_source">
+                    <summary>查看来源</summary>
+                    <p t-out="card.source"/>
+                </details>
+            </div>
+            <button type="button" class="btn btn-outline-primary o_mops_card_action"
+                t-on-click="() => this.openAction(card.action, card.title)"
+                t-att-disabled="this.state.opening"
+                t-att-aria-label="card.next_label + '：' + card.title" t-out="card.next_label"/>
+        </article>
+    </t>
+</templates>

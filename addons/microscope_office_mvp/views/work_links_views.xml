@@ -1,0 +1,39 @@
+<odoo>
+    <record id="view_meeting_form_quote_link" model="ir.ui.view">
+        <field name="name">mops.meeting.form.quote.link</field>
+        <field name="model">mops.meeting</field>
+        <field name="inherit_id" ref="view_meeting_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='project_id']" position="after">
+                <field name="quote_pack_id" groups="microscope_office_mvp.group_procurement"
+                       readonly="state == 'confirmed' or not can_edit"
+                       options="{'no_create': True}"/>
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_open_quote_pack" type="object" class="oe_stat_button"
+                        icon="fa-balance-scale" string="报价准备"
+                        groups="microscope_office_mvp.group_procurement"
+                        invisible="not quote_pack_id"/>
+            </xpath>
+        </field>
+    </record>
+    <record id="view_quote_pack_form_meetings" model="ir.ui.view">
+        <field name="name">mops.quote.pack.form.meetings</field>
+        <field name="model">mops.quote.pack</field>
+        <field name="inherit_id" ref="view_quote_pack_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/notebook" position="inside">
+                <page string="相关会议" groups="microscope_office_mvp.group_procurement">
+                    <field name="meeting_ids" readonly="1">
+                        <list create="0" edit="0" delete="0">
+                            <field name="name"/>
+                            <field name="meeting_date"/>
+                            <field name="host_user_id"/>
+                            <field name="state" widget="badge"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

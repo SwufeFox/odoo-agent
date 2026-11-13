@@ -23,7 +23,7 @@ class TestMeetingActions(MopsCase):
             'name': '整理显微镜需求', 'meeting_id': meeting.id,
         }, **extra))
 
-    def test_manual_confirmation_requires_human_assignment_and_deadline(self):
+    def test_manual_confirmation_requires_human_assignment(self):
         meeting = self.meeting()
         line = self.action(meeting, selected=True,
                            suggested_assignee_name=self.buyer.name,
@@ -35,9 +35,6 @@ class TestMeetingActions(MopsCase):
         self.assertFalse(line.deadline)
         self.assertFalse(line.generated_task_id)
         line.write({'assignee_user_id': self.buyer.id})
-        with self.assertRaises(UserError):
-            meeting.action_confirm_tasks()
-        self.assertFalse(line.generated_task_id)
         line.write({'deadline': self.deadline})
         meeting.action_confirm_tasks()
         task = line.generated_task_id
@@ -53,6 +50,13 @@ class TestMeetingActions(MopsCase):
         meeting.action_confirm_tasks()
         self.assertEqual(line.generated_task_id, task)
         self.assertEqual(self.env['mops.meeting.action'].search_count([('generated_task_id', '=', task.id)]), 1)
+
+    def test_manual_confirmation_allows_missing_deadline(self):
+        meeting = self.meeting()
+        line = self.action(meeting, selected=True, assignee_user_id=self.buyer.id)
+        meeting.action_confirm_tasks()
+        self.assertTrue(line.generated_task_id)
+        self.assertFalse(line.generated_task_id.date_deadline)
 
     def test_only_selected_lines_generate_tasks(self):
         meeting = self.meeting()
@@ -78,6 +82,8 @@ class TestMeetingActions(MopsCase):
             lambda: attendee_meeting.write({'raw_content': '篡改'}),
             attendee_meeting.action_extract_drafts,
             attendee_meeting.action_confirm_tasks,
+            attendee_meeting.action_prepare_continuation,
+            attendee_meeting.action_apply_continuation,
             attendee_meeting.unlink,
             lambda: attendee_line.write({'name': '篡改'}),
             attendee_line.unlink,
@@ -104,7 +110,7 @@ class TestMeetingActions(MopsCase):
                      {'create_uid': self.manager.id}):
             with self.assertRaises(AccessError):
                 meeting.with_context(mops_internal=True, skip_security=True).write(vals)
-        for vals in ({'generated_task_id': task.id}, {'ai_fingerprint': '伪造'}, {'write_uid': self.manager.id}):
+        for vals in ({'generated_task_id': task.id}, {'ai_fingerprint': '伪造'}, {'applied': True}, {'write_uid': self.manager.id}):
             with self.assertRaises(AccessError):
                 line.with_context(mops_internal=True).write(vals)
             with self.assertRaises(AccessError):
@@ -116,7 +122,8 @@ class TestMeetingActions(MopsCase):
         with self.assertRaises(AccessError):
             self.env['mops.meeting.action'].with_user(self.staff).with_context(
                 default_generated_task_id=task.id).create({'name': '伪造关联', 'meeting_id': meeting.id})
-        for vals in ({'mops_generated': True}, {'mops_action_id': line.id}, {'mops_meeting_id': meeting.id}):
+        for vals in ({'mops_generated': True}, {'mops_action_id': line.id}, {'mops_meeting_id': meeting.id},
+                     {'mops_continuation_action_ids': [Command.link(line.id)]}):
             with self.assertRaises(AccessError):
                 task.write(vals)
             with self.assertRaises(AccessError):

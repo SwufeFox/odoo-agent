@@ -24,6 +24,11 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:?Run python scripts/prepare_env.py first}
       ODOO_MASTER_PASSWORD: ${ODOO_MASTER_PASSWORD:?Run python scripts/prepare_env.py first}
       MOPS_BASE_URL: http://127.0.0.1:${ODOO_PORT:-8069}
+      MOPS_AI_MODE: ${MOPS_AI_MODE:-auto}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-}
+      OPENAI_TIMEOUT_SECONDS: ${OPENAI_TIMEOUT_SECONDS:-45}
     ports:
       - 127.0.0.1:${ODOO_PORT:-8069}:8069
     volumes:

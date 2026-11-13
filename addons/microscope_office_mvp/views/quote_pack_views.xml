@@ -1,0 +1,159 @@
+<odoo>
+    <record id="view_quote_line_form" model="ir.ui.view">
+        <field name="name">mops.quote.line.form</field>
+        <field name="model">mops.quote.line</field>
+        <field name="arch" type="xml">
+            <form string="供应商报价" create="0">
+                <sheet>
+                    <group>
+                        <field name="vendor_name"/>
+                        <field name="selected"/>
+                        <field name="company_id" invisible="1"/>
+                    </group>
+                    <notebook>
+                        <page string="原始材料" name="source">
+                            <field name="raw_text" nolabel="1" placeholder="粘贴这家供应商的报价文字，例如：&#10;原厂型号：MO60-140&#10;规格：60×，NA 1.40，油浸&#10;数量：2&#10;单位：个&#10;币种：CNY&#10;单价：12000元&#10;价格口径：含税&#10;税率：13%&#10;交期：收到订单后10天&#10;补充信息可直接追加在末尾。"/>
+                            <group>
+                                <field name="extraction_provider"/>
+                            </group>
+                            <details invisible="not extraction_sources">
+                                <summary>查看字段原文依据</summary>
+                                <field name="extraction_sources" nolabel="1"/>
+                            </details>
+                            <p class="text-muted">最近成功提取方式只说明提取来源；报价字段可能包含之前的事实和人工修改。原文依据用于核对，金额由系统代码计算。</p>
+                        </page>
+                        <page string="可编辑报价" name="details">
+                            <group>
+                                <group string="产品与规格">
+                                    <field name="product_name"/>
+                                    <field name="model_number"/>
+                                    <field name="specification"/>
+                                    <field name="specification_confirmed"/>
+                                    <field name="quantity_text"/>
+                                    <field name="uom_text"/>
+                                </group>
+                                <group string="价格与税费">
+                                    <field name="currency_id" options="{'no_create': True}"/>
+                                    <field name="unit_price_text"/>
+                                    <field name="tax_basis"/>
+                                    <field name="tax_rate_text"/>
+                                    <field name="freight_text"/>
+                                    <field name="freight_tax_basis"/>
+                                    <field name="freight_tax_rate_text" invisible="freight_tax_basis != 'excluded'"/>
+                                </group>
+                                <group string="交付与有效期">
+                                    <field name="delivery_text"/>
+                                    <field name="planned_date"/>
+                                    <field name="valid_until"/>
+                                </group>
+                                <group string="金额与待确认">
+                                    <field name="amount_summary"/>
+                                    <field name="attention_summary"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="补问草稿" name="followup">
+                            <p class="text-muted">以下内容可直接编辑或复制。保存与采用均不会发送给供应商。</p>
+                            <field name="followup_draft" nolabel="1"/>
+                        </page>
+                        <page string="匹配与原生询价" name="matching">
+                            <field name="matching_note" nolabel="1"/>
+                            <group>
+                                <group>
+                                    <field name="partner_id" options="{'no_create': True}"/>
+                                    <field name="product_id" options="{'no_create': True}"/>
+                                    <field name="uom_id" options="{'no_create': True}"/>
+                                    <field name="tax_id" options="{'no_create': True}"/>
+                                </group>
+                                <group>
+                                    <field name="purchase_order_id" options="{'no_create': True}" readonly="purchase_order_line_id" domain="[('state', '=', 'draft'), ('partner_id', '=', partner_id), ('company_id', '=', company_id)]"/>
+                                    <field name="purchase_order_line_id" readonly="1"/>
+                                    <field name="apply_state" string="采用状态" widget="badge"/>
+                                    <field name="apply_note"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_quote_pack_list" model="ir.ui.view">
+        <field name="name">mops.quote.pack.list</field>
+        <field name="model">mops.quote.pack</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="product_id"/>
+                <field name="attention_summary"/>
+                <field name="purchase_order_id"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_quote_pack_form" model="ir.ui.view">
+        <field name="name">mops.quote.pack.form</field>
+        <field name="model">mops.quote.pack</field>
+        <field name="arch" type="xml">
+            <form string="报价准备包">
+                <header>
+                    <button name="action_prepare" type="object" string="整理报价与补问" class="btn-primary" groups="microscope_office_mvp.group_procurement"/>
+                    <button name="action_apply_selected" type="object" string="采用选中行到草稿" groups="microscope_office_mvp.group_procurement"/>
+                </header>
+                <sheet>
+                    <div class="oe_title"><h1><field name="name" placeholder="这次要采购什么？"/></h1></div>
+                    <group>
+                        <group>
+                            <field name="product_id" options="{'no_create': True}"/>
+                            <field name="target_spec" placeholder="例如：60×，NA 1.40，油浸，M25接口"/>
+                        </group>
+                        <group>
+                            <field name="purchase_order_id" options="{'no_create': True}" domain="[('state', '=', 'draft'), ('company_id', '=', company_id)]"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <field name="adapter_label" nolabel="1" class="text-muted"/>
+                    <group invisible="not last_result"><field name="last_result" nolabel="1"/></group>
+                    <notebook>
+                        <page string="供应商报价与补问" name="quotes">
+                            <p class="text-muted">每家供应商添加一行，可粘贴散乱报价文字。按当前配置整理，人工修改和补问会保留；同一原文与处理方式复用提取结果。模型失败会保留已有内容，可直接人工编辑后采用。空白表示未知，明确免费才填 0。</p>
+                            <field name="line_ids" context="{'form_view_ref': 'microscope_office_mvp.view_quote_line_form'}">
+                                <list editable="bottom" open_form_view="1" decoration-warning="attention_summary" decoration-success="apply_state == 'applied'">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="selected"/>
+                                    <field name="vendor_name"/>
+                                    <field name="model_number"/>
+                                    <field name="quantity_text"/>
+                                    <field name="uom_text"/>
+                                    <field name="currency_id" options="{'no_create': True}"/>
+                                    <field name="unit_price_text"/>
+                                    <field name="tax_basis"/>
+                                    <field name="tax_rate_text"/>
+                                    <field name="freight_text"/>
+                                    <field name="amount_summary"/>
+                                    <field name="attention_summary"/>
+                                    <field name="apply_state" string="采用状态" widget="badge"/>
+                                    <field name="extraction_provider" optional="show"/>
+                                    <field name="raw_text" optional="hide"/>
+                                    <field name="partner_id" optional="hide" options="{'no_create': True}"/>
+                                    <field name="product_id" optional="hide" options="{'no_create': True}"/>
+                                    <field name="purchase_order_id" optional="hide" readonly="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="差异与待确认" name="attention">
+                            <group><field name="comparison_summary"/><field name="attention_summary"/></group>
+                            <p class="text-muted">不同型号、NA、币种或单位不自动等同。运费尚未明确时只展示含税货款。采用只创建询价草稿；运费和缺项仍保留在准备记录中。</p>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_quote_packs" model="ir.actions.act_window">
+        <field name="name">报价准备包</field>
+        <field name="res_model">mops.quote.pack</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">整理多家报价，准备具体补问</p><p>新建采购事项，添加供应商原文，核对后采用到原生询价草稿。</p></field>
+    </record>
+</odoo>

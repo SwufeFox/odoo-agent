@@ -1,0 +1,310 @@
+.o_mops_workbench {
+    --mops-accent: #714b67;
+    --mops-ink: #27313d;
+    --mops-muted: #596571;
+    --mops-canvas: #f6f7f9;
+    --mops-border: #dbe0e5;
+    --mops-warning: #855511;
+
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    overflow: auto;
+    color: var(--mops-ink);
+    background: var(--mops-canvas);
+    font-family: inherit;
+
+    .o_mops_workbench_content {
+        max-width: 1120px;
+        margin-inline: auto;
+        padding: clamp(16px, 3vw, 36px);
+    }
+
+    h1, h2, h3, p {
+        margin: 0;
+    }
+
+    h1 {
+        font-size: 1.75rem;
+        font-weight: 650;
+        line-height: 1.3;
+    }
+
+    h2 {
+        font-size: 1.2rem;
+        font-weight: 600;
+        line-height: 1.45;
+    }
+
+    h3 {
+        font-size: 1.05rem;
+        font-weight: 600;
+        line-height: 1.5;
+    }
+
+    p {
+        max-width: 72ch;
+        line-height: 1.65;
+        overflow-wrap: anywhere;
+    }
+
+    .btn {
+        min-height: 40px;
+        white-space: normal;
+    }
+
+    :is(button, summary):focus-visible {
+        outline: 3px solid var(--mops-accent);
+        outline-offset: 3px;
+    }
+
+    .o_mops_workbench_header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 20px;
+
+        p {
+            margin-top: 8px;
+            color: var(--mops-muted);
+        }
+
+        > button {
+            flex-shrink: 0;
+        }
+    }
+
+    .o_mops_demo_note {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 12px;
+        padding: 12px 16px;
+        border-inline-start: 3px solid var(--mops-accent);
+        background: #eeebf0;
+        line-height: 1.6;
+        margin-bottom: 24px;
+
+        strong {
+            white-space: nowrap;
+        }
+    }
+
+    .o_mops_adapter_label {
+        color: var(--mops-muted);
+        overflow-wrap: anywhere;
+    }
+
+    .o_mops_workbench_error {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px;
+        margin-bottom: 20px;
+        background: #fff3d6;
+        color: #633e09;
+        border: 1px solid #e1c386;
+        border-radius: 6px;
+
+        > button {
+            flex-shrink: 0;
+        }
+    }
+
+    .o_mops_workbench_loading {
+        margin-block: 16px;
+        color: var(--mops-muted);
+    }
+
+    .o_mops_workflows {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 32px;
+    }
+
+    .o_mops_workflow {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 22px;
+        background: white;
+        border: 1px solid var(--mops-border);
+        border-top: 3px solid var(--mops-accent);
+        border-radius: 6px;
+
+        p {
+            margin-top: 8px;
+            color: var(--mops-muted);
+        }
+    }
+
+    .o_mops_section_header {
+        margin-bottom: 12px;
+
+        p {
+            margin-top: 4px;
+            color: var(--mops-muted);
+        }
+    }
+
+    .o_mops_work_cards {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .o_mops_work_card {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 18px;
+        border: 1px solid var(--mops-border);
+        border-inline-start: 4px solid var(--mops-border);
+        background: white;
+        border-radius: 4px;
+    }
+
+    .o_mops_work_card_attention {
+        border-inline-start-color: var(--mops-warning);
+
+        .o_mops_work_card_status {
+            color: #633e09;
+            background: #fff3d6;
+        }
+    }
+
+    .o_mops_work_card_body {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .o_mops_work_card_heading {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 6px 12px;
+
+        h3 {
+            overflow-wrap: anywhere;
+        }
+    }
+
+    .o_mops_work_card_status {
+        flex-shrink: 0;
+        color: var(--mops-muted);
+        background: var(--mops-canvas);
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.9rem;
+    }
+
+    .o_mops_work_card_reason {
+        margin-top: 6px;
+    }
+
+    .o_mops_attention_label {
+        color: var(--mops-warning);
+    }
+
+    .o_mops_card_action {
+        flex-shrink: 0;
+        max-width: 220px;
+    }
+
+    .o_mops_work_card_source {
+        margin-top: 8px;
+        color: var(--mops-muted);
+
+        > p {
+            margin-top: 6px;
+            padding-inline-start: 16px;
+            white-space: pre-line;
+        }
+    }
+
+    summary {
+        cursor: pointer;
+        width: fit-content;
+        max-width: 100%;
+        padding-block: 6px;
+        line-height: 1.5;
+    }
+
+    .o_mops_more_items {
+        margin-top: 12px;
+
+        > summary {
+            color: var(--mops-accent);
+            margin-bottom: 10px;
+        }
+    }
+
+    .o_mops_workbench_empty {
+        border: 1px dashed var(--mops-border);
+        border-radius: 6px;
+        padding: 24px;
+        background: white;
+
+        p {
+            margin-top: 8px;
+            color: var(--mops-muted);
+        }
+    }
+
+    .o_mops_other_actions {
+        margin-top: 32px;
+        padding-top: 20px;
+        border-top: 1px solid var(--mops-border);
+    }
+
+    .o_mops_other_actions_list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px 28px;
+        margin-top: 12px;
+
+        > div {
+            flex: 1 1 220px;
+        }
+
+        p {
+            margin-top: 6px;
+            color: var(--mops-muted);
+            font-size: 0.95rem;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .o_mops_workflows {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .o_mops_workbench_header,
+        .o_mops_workbench_error,
+        .o_mops_work_card {
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .o_mops_workflow {
+            padding: 18px;
+        }
+
+        .o_mops_card_action {
+            max-width: 100%;
+            align-self: stretch;
+        }
+
+        .o_mops_work_card_source summary {
+            min-height: 40px;
+            display: list-item;
+        }
+    }
+}

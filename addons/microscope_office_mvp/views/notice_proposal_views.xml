@@ -1,0 +1,104 @@
+<odoo>
+    <record id="view_notice_proposal_list" model="ir.ui.view">
+        <field name="name">mops.notice.proposal.list</field>
+        <field name="model">mops.notice.proposal</field>
+        <field name="arch" type="xml">
+            <list create="false" decoration-muted="state == 'converted'">
+                <field name="name"/>
+                <field name="meeting_id"/>
+                <field name="owner_id"/>
+                <field name="state" widget="badge"/>
+                <field name="preparation_method" optional="show" widget="badge"/>
+                <field name="attention_summary" optional="show"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_notice_proposal_form" model="ir.ui.view">
+        <field name="name">mops.notice.proposal.form</field>
+        <field name="model">mops.notice.proposal</field>
+        <field name="arch" type="xml">
+            <form string="公告准备稿" create="false" duplicate="false">
+                <header>
+                    <button name="action_submit" type="object" string="提交负责人" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_create_notice" type="object" string="生成公告草稿" class="btn-primary" groups="microscope_office_mvp.group_manager" invisible="state == 'converted'"/>
+                    <button name="action_create_notice" type="object" string="打开正式公告" groups="microscope_office_mvp.group_manager" invisible="state != 'converted'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,converted"/>
+                </header>
+                <sheet>
+                    <div class="oe_title"><h1><field name="name" readonly="state == 'converted'" placeholder="通知标题"/></h1></div>
+                    <p class="text-muted" invisible="state == 'converted'">核对正文与接收人员后提交。负责人生成的是未发布公告草稿；发布与阅读确认继续使用正式公告的原有操作。</p>
+                    <div class="alert alert-info" role="status" invisible="state != 'converted'">准备内容已转入正式公告。后续修改和发布由负责人在正式公告中处理；此状态不代表已经发布或员工已读。</div>
+                    <div class="alert alert-warning" role="status" invisible="preparation_method != 'failed' or state == 'converted'">
+                        <p>首次模型整理未成功。原文已保留在“来源与核对”，请手工填写正文与接收人员后继续提交负责人。</p>
+                        <field name="preparation_error" nolabel="1" readonly="1"/>
+                    </div>
+                    <div class="alert alert-warning" role="status" invisible="not attention_summary or state == 'converted'"><field name="attention_summary" nolabel="1" readonly="1"/></div>
+                    <group>
+                        <group>
+                            <field name="meeting_id" options="{'no_create': True}"/>
+                            <field name="owner_id"/>
+                            <field name="preparation_method"/>
+                            <field name="preparation_provider" invisible="not preparation_provider"/>
+                        </group>
+                        <group>
+                            <field name="notice_id" groups="microscope_office_mvp.group_manager" invisible="state != 'converted'"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <group string="通知内容">
+                        <field name="body" nolabel="1" colspan="2" readonly="state == 'converted'" placeholder="填写通知内容；可直接修改时间、地点和安排。"/>
+                        <field name="time_text"/>
+                        <field name="location"/>
+                        <field name="audience_text"/>
+                        <field name="recipient_ids" widget="many2many_tags" options="{'no_create': True}" readonly="state == 'converted'"/>
+                    </group>
+                    <notebook>
+                        <page string="来源与核对">
+                            <p class="text-muted">模型模式从自然会议原文识别通知安排；本地模式只摘录“通知：”或“公告：”行。方式记录反映首次准备结果；再次打开保留人工修改，不重新请求模型。缺少的时间、地点与对象由人工核对；原文中相对日期保持原样。</p>
+                            <p class="text-muted">接收人员候选只来自当前可见的会议参会人员，不按模型提到的范围自动增加人员。来源依据是首次准备的快照；修改正文后请重新核对时间、地点和对象。</p>
+                            <group>
+                                <field name="source_excerpt"/>
+                                <field name="time_source"/>
+                                <field name="location_source"/>
+                                <field name="audience_source"/>
+                                <field name="recipient_source"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_notice_proposal_search" model="ir.ui.view">
+        <field name="name">mops.notice.proposal.search</field>
+        <field name="model">mops.notice.proposal</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="meeting_id"/>
+                <field name="owner_id"/>
+                <filter name="mine" string="我准备的" domain="[('owner_id', '=', uid)]"/>
+                <filter name="submitted" string="待负责人处理" domain="[('state', '=', 'submitted')]"/>
+                <filter name="preparing" string="准备中" domain="[('state', '=', 'draft')]"/>
+                <filter name="converted" string="已转公告" domain="[('state', '=', 'converted')]"/>
+            </search>
+        </field>
+    </record>
+    <record id="action_notice_proposals" model="ir.actions.act_window">
+        <field name="name">公告准备稿</field>
+        <field name="res_model">mops.notice.proposal</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">从会议的“准备通知”开始</p><p>会议中的通知决定和参会人员会预填到可编辑准备稿，提交后由负责人生成正式公告草稿。</p></field>
+    </record>
+    <record id="view_meeting_form_notice_preparation" model="ir.ui.view">
+        <field name="name">mops.meeting.form.notice.preparation</field>
+        <field name="model">mops.meeting</field>
+        <field name="inherit_id" ref="microscope_office_mvp.view_meeting_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_prepare_notice" type="object" string="准备通知" class="btn-secondary"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

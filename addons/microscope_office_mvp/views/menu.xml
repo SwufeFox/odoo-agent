@@ -34,6 +34,9 @@
         <field name="view_id" ref="base.view_users_form"/><field name="act_window_id" ref="action_office_users"/>
     </record>
     <menuitem id="menu_office" name="显微镜企业办公" sequence="5" groups="microscope_office_mvp.group_staff"/>
+    <menuitem id="menu_workbench" name="工作加速" parent="menu_office" action="action_workbench" sequence="7" groups="microscope_office_mvp.group_staff"/>
+    <menuitem id="menu_quote_packs" name="报价准备" parent="menu_office" action="action_quote_packs" sequence="48" groups="microscope_office_mvp.group_procurement"/>
+    <menuitem id="menu_notice_proposals" name="通知准备" parent="menu_office" action="action_notice_proposals" sequence="15" groups="microscope_office_mvp.group_staff"/>
     <menuitem id="menu_notices" name="内部公告" parent="menu_office" action="action_notices" sequence="10"/>
     <menuitem id="menu_meetings" name="会议与行动项" parent="menu_office" action="action_meetings" sequence="20"/>
     <menuitem id="menu_tasks" name="我的任务" parent="menu_office" action="action_office_tasks" sequence="5"/>

@@ -20,7 +20,10 @@ def seed(env, credential_path):
         existing = env.ref(f'{module}.{key}', raise_if_not_found=False)
         if existing and existing.exists():
             return existing
-        result = env[model].with_context(no_reset_password=True, mail_create_nosubscribe=True).create(vals)
+        result = env[model].with_context(
+            no_reset_password=True, mail_create_nosubscribe=True,
+            mail_auto_subscribe_no_notify=True, mail_notify_force_send=False,
+        ).create(vals)
         env['ir.model.data'].create({'module': module, 'name': key, 'model': model, 'res_id': result.id, 'noupdate': True})
         return result
 
@@ -127,7 +130,9 @@ def seed(env, credential_path):
     draft_notice = record('draft_notice', 'mops.notice', {'name': '模拟公告：供应商评审会', 'body': '<p>负责人确认接收范围后再发布。</p>', 'audience': 'selected', 'recipient_ids': [Command.set([users['staff'].id])]})
     if draft_notice.name == '模拟公告草稿：供应商评审会':
         draft_notice.write({'name': '模拟公告：供应商评审会'})
-    return {'users': 4, 'vendors': len(vendors), 'rfqs': sum(o.state == 'draft' for o in orders), 'pending_orders': sum(o.state == 'to approve' for o in orders), 'contract_id': contract.id, 'meeting_id': meeting.id, 'ai_meeting_id': ai_meeting.id, 'notice_id': notice.id}
+    from seed_acceleration import seed_acceleration
+    accelerated = seed_acceleration(env, record, users, vendors, products, project)
+    return {'users': 4, 'vendors': len(vendors), 'rfqs': sum(o.state == 'draft' for o in orders), 'pending_orders': sum(o.state == 'to approve' for o in orders), 'contract_id': contract.id, 'meeting_id': meeting.id, 'ai_meeting_id': ai_meeting.id, 'notice_id': notice.id, **accelerated}
 
 
 def main():

@@ -3,3 +3,7 @@ from . import test_contract
 from . import test_meeting_actions
 from . import test_notice
 from . import test_ai
+from . import test_quote_pack
+from . import test_meeting_continuation
+from . import test_notice_proposal
+from . import test_work_brief

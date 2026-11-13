@@ -8,8 +8,9 @@
         <field name="arch" type="xml">
             <form string="会议纪要">
                 <header>
-                    <button name="action_extract_drafts" type="object" string="提取待办草稿" class="btn-secondary" invisible="state == 'confirmed' or not can_edit"/>
-                    <button name="action_confirm_tasks" type="object" string="确认并生成任务" class="btn-primary" invisible="state == 'confirmed' or not can_edit" confirm="已核对勾选行动项的责任人和截止日期？确认后生成正式任务。"/>
+                    <button name="action_prepare_continuation" type="object" string="整理并接续工作" class="btn-secondary" invisible="state == 'confirmed' or not can_edit"/>
+                    <button name="action_apply_continuation" type="object" string="采纳选中事项" class="btn-primary" invisible="state == 'confirmed' or not can_edit"/>
+                    <button name="action_confirm_tasks" type="object" string="确认并锁定会议" class="btn-secondary" invisible="state == 'confirmed' or not can_edit" confirm="采纳选中事项并锁定本次纪要？未选中的事项将保持不执行。"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,review,confirmed"/>
                 </header>
                 <sheet>
@@ -26,20 +27,60 @@
                     </group>
                     <notebook>
                         <page string="纪要与待办">
-                            <group string="会议原文"><field name="raw_content" nolabel="1" colspan="2" readonly="state == 'confirmed' or not can_edit" placeholder="填写会议记录；也可直接在下方手工增加行动项。规则提取示例：待办：确认物镜交期 | 负责人：采购小陈 | 截止：2026-11-20"/></group>
+                            <group string="会议原文"><field name="raw_content" nolabel="1" colspan="2" readonly="state == 'confirmed' or not can_edit" placeholder="更新任务：跟进供应商交期 | 负责人：采购小陈 | 截止：2026-11-20 | 进展：补问含税运费。&#10;行动项：核对物镜规格 | 负责人：研发小林&#10;仅记录：先不下单，待运费与规格确认。"/></group>
+                            <group string="整理方式与来源">
+                                <field name="processing_mode"/>
+                                <field name="extraction_provider" invisible="not extraction_provider"/>
+                            </group>
                             <div class="alert alert-warning" role="alert" invisible="not ai_error"><field name="ai_error" readonly="1" nolabel="1"/></div>
-                            <group string="会议摘要" invisible="not ai_summary"><field name="ai_summary" readonly="1" nolabel="1" colspan="2"/></group>
-                            <separator string="行动项审核"/>
-                            <p class="text-muted">核对原文依据，填写正式责任人与截止日期，再勾选需要执行的事项。确认后直接查看生成的任务。</p>
+                            <group string="整理提示" invisible="not ai_summary"><field name="ai_summary" readonly="1" nolabel="1" colspan="2"/></group>
+                            <separator string="行动与决定"/>
+                            <p class="text-muted">当前配置方式不代表调用已成功，请查看整理结果或失败提示。模型可从自然纪要整理候选；本地规则模式需使用明确前缀。核对原文、处理方式与选中行后采纳；待核对的姓名和日期在对应行提示。“仅记录”保留决定，不创建任务。整理失败仍可在下方手工添加。</p>
                             <field name="action_ids" nolabel="1" readonly="state == 'confirmed' or not can_edit">
-                                <list editable="bottom" decoration-muted="not selected">
-                                    <field name="selected"/><field name="name"/><field name="suggested_assignee_name" optional="show"/>
-                                    <field name="suggested_deadline" optional="show"/><field name="ambiguous" optional="show"/>
-                                    <field name="assignee_user_id" options="{'no_create': True}"/><field name="deadline"/>
-                                    <field name="source_excerpt" optional="hide"/><field name="generated_task_id" readonly="1" optional="show"/>
+                                <list editable="bottom" decoration-muted="applied" decoration-warning="attention_summary and not applied">
+                                    <field name="company_id" column_invisible="True"/>
+                                    <field name="selected" readonly="applied"/>
+                                    <field name="action_kind" readonly="applied"/>
+                                    <field name="name" readonly="applied"/>
+                                    <field name="target_task_id" readonly="applied or action_kind != 'update'" domain="[('company_id', '=', company_id)]" options="{'no_create': True}" optional="show"/>
+                                    <field name="assignee_user_id" readonly="applied or action_kind == 'record'" options="{'no_create': True}"/>
+                                    <field name="deadline" readonly="applied or action_kind == 'record'"/>
+                                    <field name="update_note" readonly="applied" optional="show"/>
+                                    <field name="attention_summary" optional="show"/>
+                                    <field name="suggested_assignee_name" readonly="applied" optional="hide"/>
+                                    <field name="suggested_deadline" readonly="applied" optional="hide"/>
+                                    <field name="source_excerpt" readonly="applied" optional="hide"/>
+                                    <field name="extraction_provider" readonly="1" optional="hide"/>
+                                    <field name="generated_task_id" readonly="1" optional="show"/>
+                                    <field name="applied" optional="show"/>
                                 </list>
-                                <form string="审核行动项"><sheet><group><field name="selected"/><field name="name"/><field name="suggested_assignee_name"/><field name="suggested_deadline"/><field name="source_excerpt"/><field name="ambiguous"/><field name="assignee_user_id" options="{'no_create': True}"/><field name="deadline"/><field name="generated_task_id" readonly="1"/></group></sheet></form>
+                                <form string="核对接续事项">
+                                    <sheet>
+                                        <field name="company_id" invisible="1"/>
+                                        <group>
+                                            <field name="applied"/>
+                                            <field name="selected" readonly="applied"/>
+                                            <field name="action_kind" readonly="applied"/>
+                                            <field name="name" readonly="applied"/>
+                                            <field name="target_task_id" invisible="action_kind != 'update'" readonly="applied" domain="[('company_id', '=', company_id)]" options="{'no_create': True}"/>
+                                            <field name="assignee_user_id" invisible="action_kind == 'record'" readonly="applied" options="{'no_create': True}"/>
+                                            <field name="deadline" invisible="action_kind == 'record'" readonly="applied"/>
+                                            <field name="update_note" readonly="applied" invisible="action_kind == 'record'"/>
+                                            <field name="attention_summary" invisible="not attention_summary"/>
+                                            <field name="generated_task_id" readonly="1" invisible="not generated_task_id"/>
+                                        </group>
+                                        <group string="原文依据">
+                                            <field name="source_excerpt" readonly="applied"/>
+                                            <field name="suggested_assignee_name" readonly="applied"/>
+                                            <field name="suggested_deadline" readonly="applied"/>
+                                            <field name="extraction_provider" readonly="1"/>
+                                        </group>
+                                    </sheet>
+                                </form>
                             </field>
+                            <group string="通知候选（仅供核对，未创建或发送通知）" invisible="not notice_candidates">
+                                <field name="notice_candidates" nolabel="1" readonly="1" colspan="2"/>
+                            </group>
                         </page>
                     </notebook>
                 </sheet>
@@ -52,6 +93,6 @@
     </record>
     <record id="action_meetings" model="ir.actions.act_window">
         <field name="name">会议与行动项</field><field name="res_model">mops.meeting</field><field name="view_mode">list,form</field>
-        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">保存会议纪要，确认责任人与截止日期</p><p>支持手工增加行动项，也可提取待办草稿供人工审核。</p></field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">把会议决定接到实际工作</p><p>粘贴纪要，整理新增、更新与仅记录事项，核对后一次采纳；也可手工添加行动项。</p></field>
     </record>
 </odoo>

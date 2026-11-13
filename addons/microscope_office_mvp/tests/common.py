@@ -1,3 +1,6 @@
+import os
+from unittest.mock import patch
+
 from datetime import timedelta
 
 from odoo import Command, fields
@@ -8,6 +11,9 @@ class MopsCase(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        model_mode = patch.dict(os.environ, {'MOPS_AI_MODE': 'local'})
+        model_mode.start()
+        cls.addClassCleanup(model_mode.stop)
         cls.other_company = cls.env['res.company'].create({'name': 'MOPS 权限隔离测试公司'})
         users = cls.env['res.users'].with_context(no_reset_password=True, mail_create_nosubscribe=True)
 

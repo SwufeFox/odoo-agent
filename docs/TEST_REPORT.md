@@ -4,7 +4,7 @@
 
 - Windows 本地源码运行：Odoo20.0 FINAL，固定提交 `7d8d985d0b4e5bf758b2a493e0da7f3ddce1383c`。
 - Python3.12.16（项目隔离环境）；PostgreSQL17.12（项目独立数据目录，loopback55432）。
-- 数据为固定模拟数据；没有外部 LLM、邮件或 IM 调用。
+- 全部使用模拟业务数据。按用户指定配置实际调用OpenAI兼容模型 `commandcode/deepseek/deepseek-v4.1-flash`；没有邮件、短信或IM外发。
 
 ## 已执行证据
 
@@ -14,14 +14,24 @@
 | 新数据库安装 | `python scripts/dev.py init` | exit0；68个原生/自定义模块加载成功，包含全部业务视图 |
 | 模块升级 | `python scripts/dev.py upgrade` | exit0；日志 `.runtime/upgrade.log` |
 | 模拟数据与重复初始化 | `python scripts/dev.py seed`，成功后再次执行 | 4账号、3供应商、2RFQ、1待审批单；外部ID保持不变，已有行动项与进度保留 |
-| 独立库ORM验收 | `python scripts/dev.py test` | **40项，0失败、0错误**；模块统计50（含子测试/统计单元）；日志 `.runtime/test.log` |
+| 独立库ORM验收 | `python scripts/dev.py test` | **84项，0失败、0错误**；日志 `.runtime/test.log`。此完整运行后对数字文本规范化另执行下列2项定向回归 |
 | 真实会话端到端验收 | `.runtime/venv/Scripts/python.exe scripts/smoke_test.py` | **9组全部PASS**；输出 `.runtime/smoke_result.json` |
 | 卸载后重装 | 在专门克隆的 `mops_reinstall` 库执行原生 `odoo-bin module uninstall`，再 `module install` | 均exit0；全部模型、安全配置和视图重新安装成功；随后删除该一次性验证库，未卸载演示库 |
 | 数据库与附件重启 | 停止Odoo；`python scripts/dev.py db-stop`；重新启动PostgreSQL与Odoo | PASS；任务、公告、合同记录完全一致，附件SHA-256一致；输出 `.runtime/persistence_result.json` |
 | 原生浏览器验收 | 独立Chrome实际登录manager与staff，操作原生页面 | PASS；UI确认2个手工任务、提取2条草稿、发布定向公告、员工阅读、参会者只读与本人任务可见；输出 `.runtime/ui_result.json` 与截图 `.runtime/screenshots/` |
 | 角色工作流浏览器验收 | 独立Chrome登录全部四角色并操作原生页面 | PASS；管理员完整表单开户、修改角色、设置密码及新账号首次登录；员工目录关联；合同新建询价预填；任务回到会议及仅显示本人可读的关联任务；公告确认反馈/阅读时间和负责人查看该公告回执；输出 `.runtime/workflow_ui_result.json` 与截图 `.runtime/screenshots/` |
+| 数字文本与原文依据回归 | Odoo `--test-tags '/microscope_office_mvp:TestQuotePack.test_model_understands_unlabelled_material_with_grounding,/microscope_office_mvp:TestQuotePack.test_model_rejects_unsupported_fields_values_and_sources'` | **2项，0失败、0错误**；日志 `.runtime/quote_model_retry.log` |
+| 真实模型连续工作验收 | `.runtime/venv/Scripts/python.exe scripts/smoke_acceleration.py --output .runtime/acceleration_model_smoke.json` | **6组全部PASS**；实际使用指定DeepSeek模型，覆盖报价到RFQ、会议接续、通知转草稿、补运费保留人工修改、权限隔离和失败后人工继续 |
+| 无模板前缀的自然语言材料 | 一次性真实会话脚本，执行后已删除 | **3组全部PASS**；自然报价提取12000元/13%/零运费，纪要接续旧任务并新增研发任务、保留不下单限制，员工通知转未发布草稿；结果 `.runtime/natural_model_result.json` |
+| 工作加速浏览器验收 | 独立Chrome实际登录manager和staff，使用页面入口 | **PASS**；当前模型、真实提取值、报价原生展开、会议关联、员工工作台和本人通知准备均验证；结果 `.runtime/acceleration_ui_result.json`，截图位于 `.runtime/screenshots/` |
 
 ORM验收包括合同关联/附件保密、员工商业数据CRUD拒绝、物料成本和供应商报价保密、原生阈值审批、直接状态/审批人/上下文默认值伪造、会议及行动项权限、任务原子生成/重复确认、公告受众/发布元数据/回执权限、AI非法输出/数量与长度/超时/人工恢复。新增跨角色快捷入口、个人阅读状态与回执隔离，以及管理员批量开户后用户/联系人/员工姓名一致的回归验证。
+
+本轮完整ORM回归包含新增报价准备、会议接续、通知准备、工作台权限及模型输出校验。旧版9组会话、四角色页面与重启证据保留为基线；本轮实际模型行为由6组连续场景和3组自然语言材料验证，不将早期规则运行记成真实模型成功。
+
+真实模型初次直接探测返回HTTP403，随后实际应用请求成功。真实响应中的税率 `13%` 曾被纯数字字段校验拒绝，现对原文有依据的数字文本统一规范化，再执行原文依据校验；非法字段、无依据数值及来源仍拒绝。指定模型处理成功的方式记录在各产物上，当前配置本身不代表成功。
+
+页面复查发现报价行原生展开会使用自动生成表单，显示内部快照和处理指纹。已将既有业务表单注册为该模型的共享表单，字段依据默认折叠；最后这次视图调整通过模块升级（exit0）及实际浏览器展开、返回和角色入口验证。
 
 真实HTTP会话验收额外证明：四个账号可登录；采购从待审批到锁定；普通员工看不到合同、底价与他人任务；两次并发会议确认只产生2条唯一正式任务；两次并发已读只有1条回执；本地规则只写建议，人工确认后生成任务；提取失败仍能人工继续。新增使用真实管理员会话创建员工账号，由负责人发布定向公告、分派任务，新员工登录后确认已读并完成任务，负责人读取结果；同一账号升为采购再降为员工后，合同访问权随之获得并撤销。
 
@@ -37,7 +47,7 @@ Windows原生filestore GC会因文件句柄占用输出INFO级PermissionError，
 
 ## 验证边界
 
-当前机器没有Docker或WSL；Dockerfile/Compose已提供，但不能将容器构建/启动描述为已执行。生产备份恢复、HTTPS、监控及真实模型调用不在售前MVP验收范围。
+当前机器没有Docker或WSL；Dockerfile/Compose已提供，但不能将容器构建/启动描述为已执行。真实模型已用模拟材料验证；生产备份恢复、HTTPS和监控未执行。
 
 ## 门禁结果
 
@@ -67,20 +77,20 @@ Windows原生filestore GC会因文件句柄占用输出INFO级PermissionError，
 [待客户确认] 底价访问、审批与合同基数；本地假设已记录。
 
 [Gate] G3
-[状态] PASS（本地规则适配器）
-[本次修改] 严格Schema、证据片段、候选姓名/日期、人工确认及失败回退。
-[验证证据] 提取仅写草稿；未知人员、非法Schema、超时/空/超长输出、重复提取、人工恢复及重复确认测试通过。
-[尚存问题] 未接入真实外部模型；本次没有该授权或API Key。
-[下一步] 继续使用本地规则和手工路径演示。
-[待客户确认] 是否需要真实模型、允许发送的数据与服务商。
+[状态] PASS（本地规则及指定真实模型）
+[本次修改] 统一OpenAI兼容客户端、报价/会议/通知适配、原文依据、候选范围校验和失败保留。
+[验证证据] 6组真实模型连续场景和3组自然语言场景通过；规则、非法输出、超时与人工恢复由ORM回归覆盖。
+[尚存问题] 模型服务可用性依赖指定上游；目前只验证模拟材料。
+[下一步] 按连续演示脚本核对业务价值。
+[待客户确认] 真实客户材料的模型授权与数据分类。
 
 [Gate] G4
 [状态] PASS（本地源码验收）
 [本次修改] 测试、README、演示脚本、限制、客户问题和变更记录。
-[验证证据] 40项ORM测试0失败0错误；9组真实会话场景PASS；原生Chrome页面操作PASS；重启后附件与记录一致。
+[验证证据] 本轮84项ORM测试及2项定向回归均0失败0错误，6组真实模型连续场景及3组自然语言场景PASS；原有角色页面、9组会话与重启记录作为基线保留。
 [尚存问题] Docker和生产保障未实测，不将其算作完成的生产能力。
 [下一步] 按DEMO_SCRIPT演示并记录客户反馈。
 [待客户确认] 是否将某个已验证闭环转为独立付费试点。
 ```
 
-G5生产试点未启动；没有真实采购、外发通信、真实敏感数据、付费资源或交付承诺。
+G5生产试点未启动；没有真实采购、邮件/IM外发、真实敏感数据、付费资源或交付承诺。

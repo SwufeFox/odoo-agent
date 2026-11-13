@@ -21,3 +21,12 @@ supplierinfo_confidential,供应商报价保密,product.supplierinfo,,crud,"[(1,
 supplierinfo_buyer,采购供应商报价维护,product.supplierinfo,microscope_office_mvp.group_procurement,cru,
 product_buyer,采购物料维护,product.product,microscope_office_mvp.group_procurement,cru,
 template_buyer,采购物料模板维护,product.template,microscope_office_mvp.group_procurement,cru,
+quote_pack_buyer,采购报价准备编辑,mops.quote.pack,microscope_office_mvp.group_procurement,cru,
+quote_pack_manager,负责人报价准备管理,mops.quote.pack,microscope_office_mvp.group_manager,crud,
+quote_pack_company,报价准备公司隔离,mops.quote.pack,,crud,"[('company_id', 'in', company_ids)]"
+quote_line_buyer,采购报价明细编辑,mops.quote.line,microscope_office_mvp.group_procurement,crud,"[('pack_id', 'access', 'write')]"
+quote_line_manager,负责人报价明细管理,mops.quote.line,microscope_office_mvp.group_manager,crud,
+quote_line_company,报价明细公司隔离,mops.quote.line,,crud,"[('company_id', 'in', company_ids)]"
+proposal_staff,员工本人通知准备,mops.notice.proposal,microscope_office_mvp.group_staff,cru,"[('owner_id', '=', user.id), ('meeting_id', 'access', 'read')]"
+proposal_manager,负责人通知准备管理,mops.notice.proposal,microscope_office_mvp.group_manager,crud,
+proposal_company,通知准备公司隔离,mops.notice.proposal,,crud,"[('company_id', 'in', company_ids)]"

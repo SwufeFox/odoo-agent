@@ -4,3 +4,8 @@ from . import meeting
 from . import meeting_action
 from . import notice
 from . import res_users
+from . import quote_pack
+from . import notice_proposal
+from . import work_links
+from . import work_brief
+from . import workbench
