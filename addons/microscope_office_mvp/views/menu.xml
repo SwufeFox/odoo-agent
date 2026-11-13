@@ -1,0 +1,47 @@
+<odoo>
+    <record id="action_office_tasks" model="ir.actions.act_window">
+        <field name="name">我的任务</field><field name="res_model">project.task</field><field name="view_mode">list,kanban,form</field>
+        <field name="context">{'search_default_my_tasks': 1}</field>
+    </record>
+    <record id="action_office_vendors" model="ir.actions.act_window">
+        <field name="name">供应商</field><field name="res_model">res.partner</field><field name="view_mode">list,form</field>
+        <field name="domain">[('supplier_rank', '&gt;', 0)]</field><field name="context">{'default_supplier_rank': 1, 'res_partner_search_mode': 'supplier'}</field>
+    </record>
+    <record id="action_office_purchase" model="ir.actions.act_window">
+        <field name="name">询报价与采购单</field><field name="res_model">purchase.order</field><field name="view_mode">list,form</field>
+    </record>
+    <record id="action_office_directory" model="ir.actions.act_window">
+        <field name="name">员工目录</field><field name="res_model">hr.employee.public</field><field name="view_mode">list,form</field>
+    </record>
+    <record id="action_office_approvals" model="ir.actions.act_window">
+        <field name="name">待我审批</field><field name="res_model">purchase.order</field><field name="view_mode">list,form</field>
+        <field name="domain">[('state', '=', 'to approve')]</field><field name="context">{'create': False}</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">暂无待审批采购单</p><p>采购提交后会出现在这里。需要查看其他订单时，打开“询报价与采购单”。</p></field>
+    </record>
+    <record id="action_office_users" model="ir.actions.act_window">
+        <field name="name">员工账号</field><field name="res_model">res.users</field><field name="view_mode">list,form</field>
+        <field name="view_id" ref="base.view_users_tree"/>
+        <field name="domain">[('share', '=', False)]</field>
+        <field name="context" eval="{'no_reset_password': True, 'default_notification_type': 'inbox', 'default_create_employee': True, 'default_group_ids': [(6, 0, [ref('group_staff')])]}"/>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">创建员工账号并分配办公角色</p><p>新账号默认普通员工。保存后可在操作菜单中设置密码；本地演示不发送邀请邮件。</p></field>
+    </record>
+    <record id="action_office_users_list" model="ir.actions.act_window.view">
+        <field name="sequence">10</field><field name="view_mode">list</field>
+        <field name="view_id" ref="base.view_users_tree"/><field name="act_window_id" ref="action_office_users"/>
+    </record>
+    <record id="action_office_users_form" model="ir.actions.act_window.view">
+        <field name="sequence">20</field><field name="view_mode">form</field>
+        <field name="view_id" ref="base.view_users_form"/><field name="act_window_id" ref="action_office_users"/>
+    </record>
+    <menuitem id="menu_office" name="显微镜企业办公" sequence="5" groups="microscope_office_mvp.group_staff"/>
+    <menuitem id="menu_notices" name="内部公告" parent="menu_office" action="action_notices" sequence="10"/>
+    <menuitem id="menu_meetings" name="会议与行动项" parent="menu_office" action="action_meetings" sequence="20"/>
+    <menuitem id="menu_tasks" name="我的任务" parent="menu_office" action="action_office_tasks" sequence="5"/>
+    <menuitem id="menu_directory" name="员工目录" parent="menu_office" action="action_office_directory" sequence="35"/>
+    <menuitem id="menu_vendors" name="供应商" parent="menu_office" action="action_office_vendors" sequence="40" groups="microscope_office_mvp.group_procurement"/>
+    <menuitem id="menu_approvals" name="待我审批" parent="menu_office" action="action_office_approvals" sequence="45" groups="microscope_office_mvp.group_manager"/>
+    <menuitem id="menu_purchase" name="询报价与采购单" parent="menu_office" action="action_office_purchase" sequence="50" groups="microscope_office_mvp.group_procurement"/>
+    <menuitem id="menu_contracts" name="采购合同" parent="menu_office" action="action_contracts" sequence="60" groups="microscope_office_mvp.group_procurement"/>
+    <menuitem id="menu_notice_receipts" name="公告阅读回执" parent="menu_office" action="action_notice_receipts" sequence="70" groups="microscope_office_mvp.group_manager"/>
+    <menuitem id="menu_users" name="员工账号" parent="menu_office" action="action_office_users" sequence="80" groups="microscope_office_mvp.group_admin"/>
+</odoo>

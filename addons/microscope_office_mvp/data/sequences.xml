@@ -1,0 +1,9 @@
+<odoo noupdate="1">
+    <record id="sequence_contract" model="ir.sequence">
+        <field name="name">采购合同</field>
+        <field name="code">mops.contract</field>
+        <field name="prefix">MOPS/%(year)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

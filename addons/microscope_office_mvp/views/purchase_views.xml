@@ -1,0 +1,22 @@
+<odoo>
+    <record id="purchase_order_office_form" model="ir.ui.view">
+        <field name="name">purchase.order.office.form</field><field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/group/group/field[@name='partner_ref']" position="after">
+                <field name="mops_contract_partner_id" invisible="1" groups="microscope_office_mvp.group_procurement"/>
+                <field name="mops_contract_id" groups="microscope_office_mvp.group_procurement" domain="[('company_id', '=', company_id), ('partner_id.commercial_partner_id', '=', mops_contract_partner_id)]"/>
+            </xpath>
+            <xpath expr="//group[@name='purchase_info']/field[@name='user_id']" position="after">
+                <field name="mops_approved_by_id" readonly="1"/>
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_open_mops_contract" type="object" class="oe_stat_button" icon="fa-file-text-o" string="采购合同" groups="microscope_office_mvp.group_procurement" invisible="not mops_contract_id" aria-label="查看关联采购合同"/>
+            </xpath>
+            <xpath expr="//field[@name='order_line']/list//field[@name='product_id']" position="after">
+                <field name="manufacturer_pn" optional="show" readonly="parent.state not in ('draft', 'sent')"/>
+                <field name="technical_spec" optional="hide" readonly="parent.state not in ('draft', 'sent')"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

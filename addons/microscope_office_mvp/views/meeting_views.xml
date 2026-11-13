@@ -1,0 +1,57 @@
+<odoo>
+    <record id="view_meeting_list" model="ir.ui.view">
+        <field name="name">mops.meeting.list</field><field name="model">mops.meeting</field>
+        <field name="arch" type="xml"><list decoration-success="state == 'confirmed'"><field name="name"/><field name="meeting_date"/><field name="host_user_id"/><field name="attendee_ids" widget="many2many_tags"/><field name="state" widget="badge"/><field name="company_id" groups="base.group_multi_company"/></list></field>
+    </record>
+    <record id="view_meeting_form" model="ir.ui.view">
+        <field name="name">mops.meeting.form</field><field name="model">mops.meeting</field>
+        <field name="arch" type="xml">
+            <form string="会议纪要">
+                <header>
+                    <button name="action_extract_drafts" type="object" string="提取待办草稿" class="btn-secondary" invisible="state == 'confirmed' or not can_edit"/>
+                    <button name="action_confirm_tasks" type="object" string="确认并生成任务" class="btn-primary" invisible="state == 'confirmed' or not can_edit" confirm="已核对勾选行动项的责任人和截止日期？确认后生成正式任务。"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,review,confirmed"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_tasks" type="object" class="oe_stat_button" icon="fa-tasks" invisible="not task_count" aria-label="查看会议关联任务">
+                            <field name="task_count" widget="statinfo" string="关联任务"/>
+                        </button>
+                    </div>
+                    <field name="can_edit" invisible="1"/>
+                    <div class="oe_title"><h1><field name="name" placeholder="例如：显微镜物镜交期协调会" readonly="state == 'confirmed' or not can_edit"/></h1></div>
+                    <group>
+                        <group><field name="meeting_date" readonly="state == 'confirmed' or not can_edit"/><field name="host_user_id" readonly="state == 'confirmed' or not can_edit"/><field name="attendee_ids" widget="many2many_tags" readonly="state == 'confirmed' or not can_edit"/></group>
+                        <group><field name="project_id" readonly="state == 'confirmed' or not can_edit"/><field name="company_id" groups="base.group_multi_company" readonly="state == 'confirmed' or not can_edit"/></group>
+                    </group>
+                    <notebook>
+                        <page string="纪要与待办">
+                            <group string="会议原文"><field name="raw_content" nolabel="1" colspan="2" readonly="state == 'confirmed' or not can_edit" placeholder="填写会议记录；也可直接在下方手工增加行动项。规则提取示例：待办：确认物镜交期 | 负责人：采购小陈 | 截止：2026-11-20"/></group>
+                            <div class="alert alert-warning" role="alert" invisible="not ai_error"><field name="ai_error" readonly="1" nolabel="1"/></div>
+                            <group string="会议摘要" invisible="not ai_summary"><field name="ai_summary" readonly="1" nolabel="1" colspan="2"/></group>
+                            <separator string="行动项审核"/>
+                            <p class="text-muted">核对原文依据，填写正式责任人与截止日期，再勾选需要执行的事项。确认后直接查看生成的任务。</p>
+                            <field name="action_ids" nolabel="1" readonly="state == 'confirmed' or not can_edit">
+                                <list editable="bottom" decoration-muted="not selected">
+                                    <field name="selected"/><field name="name"/><field name="suggested_assignee_name" optional="show"/>
+                                    <field name="suggested_deadline" optional="show"/><field name="ambiguous" optional="show"/>
+                                    <field name="assignee_user_id" options="{'no_create': True}"/><field name="deadline"/>
+                                    <field name="source_excerpt" optional="hide"/><field name="generated_task_id" readonly="1" optional="show"/>
+                                </list>
+                                <form string="审核行动项"><sheet><group><field name="selected"/><field name="name"/><field name="suggested_assignee_name"/><field name="suggested_deadline"/><field name="source_excerpt"/><field name="ambiguous"/><field name="assignee_user_id" options="{'no_create': True}"/><field name="deadline"/><field name="generated_task_id" readonly="1"/></group></sheet></form>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_meeting_search" model="ir.ui.view">
+        <field name="name">mops.meeting.search</field><field name="model">mops.meeting</field>
+        <field name="arch" type="xml"><search><field name="name"/><field name="host_user_id"/><filter name="my_hosted" string="我主持的" domain="[('host_user_id','=',uid)]"/><filter name="pending" string="待确认" domain="[('state','!=','confirmed')]"/><group><filter name="by_host" string="主持人" context="{'group_by':'host_user_id'}"/></group></search></field>
+    </record>
+    <record id="action_meetings" model="ir.actions.act_window">
+        <field name="name">会议与行动项</field><field name="res_model">mops.meeting</field><field name="view_mode">list,form</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">保存会议纪要，确认责任人与截止日期</p><p>支持手工增加行动项，也可提取待办草稿供人工审核。</p></field>
+    </record>
+</odoo>

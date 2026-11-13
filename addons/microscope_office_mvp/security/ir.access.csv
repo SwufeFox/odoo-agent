@@ -1,0 +1,23 @@
+id,name,model_id,group_id/id,operation,domain
+contract_buyer,采购合同编辑,mops.contract,microscope_office_mvp.group_procurement,cru,
+contract_manager,负责人合同管理,mops.contract,microscope_office_mvp.group_manager,crud,
+contract_company,合同公司隔离,mops.contract,,crud,"[('company_id', 'in', company_ids)]"
+meeting_read,参与会议读取,mops.meeting,microscope_office_mvp.group_staff,r,"['|', ('host_user_id', '=', user.id), ('attendee_ids', 'in', [user.id])]"
+meeting_edit,主持人会议编辑,mops.meeting,microscope_office_mvp.group_staff,cud,"[('host_user_id', '=', user.id)]"
+meeting_manager,负责人会议管理,mops.meeting,microscope_office_mvp.group_manager,crud,
+meeting_company,会议公司隔离,mops.meeting,,crud,"[('company_id', 'in', company_ids)]"
+action_read,会议行动项读取,mops.meeting.action,microscope_office_mvp.group_staff,r,"[('meeting_id', 'access', 'read')]"
+action_edit,会议行动项编辑,mops.meeting.action,microscope_office_mvp.group_staff,cud,"[('meeting_id', 'access', 'write')]"
+action_manager,负责人行动项管理,mops.meeting.action,microscope_office_mvp.group_manager,crud,
+action_company,行动项公司隔离,mops.meeting.action,,crud,"[('company_id', 'in', company_ids)]"
+notice_staff,员工公告读取,mops.notice,microscope_office_mvp.group_staff,r,"[('state', '=', 'published'), '|', ('audience', '=', 'all'), ('recipient_ids', 'in', [user.id])]"
+notice_manager,负责人公告管理,mops.notice,microscope_office_mvp.group_manager,crud,
+notice_company,公告公司隔离,mops.notice,,crud,"[('company_id', 'in', company_ids)]"
+receipt_staff,员工本人阅读回执,mops.notice.read,microscope_office_mvp.group_staff,cr,"[('user_id', '=', user.id), ('notice_id', 'access', 'read')]"
+receipt_manager,负责人回执读取,mops.notice.read,microscope_office_mvp.group_manager,r,
+receipt_company,回执公司隔离,mops.notice.read,,crud,"[('company_id', 'in', company_ids)]"
+task_staff_scope,员工任务责任范围,project.task,,crud,"[(1, '=', 1)] if not user.has_group('microscope_office_mvp.group_staff') or user.has_group('microscope_office_mvp.group_manager') else ['|', ('user_ids', 'in', [user.id]), ('create_uid', '=', user.id)]"
+supplierinfo_confidential,供应商报价保密,product.supplierinfo,,crud,"[(1, '=', 1)] if user.has_group('purchase.group_purchase_user') else [(0, '=', 1)]"
+supplierinfo_buyer,采购供应商报价维护,product.supplierinfo,microscope_office_mvp.group_procurement,cru,
+product_buyer,采购物料维护,product.product,microscope_office_mvp.group_procurement,cru,
+template_buyer,采购物料模板维护,product.template,microscope_office_mvp.group_procurement,cru,

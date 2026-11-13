@@ -1,0 +1,12 @@
+<odoo>
+    <record id="task_form_office_source" model="ir.ui.view">
+        <field name="name">project.task.form.office.source</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2"/>
+        <field name="arch" type="xml">
+            <xpath expr="(//sheet/group/group/field[@name='project_id'])[1]" position="after">
+                <field name="mops_meeting_id" string="来源会议" readonly="1" groups="microscope_office_mvp.group_staff" invisible="not mops_meeting_id"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

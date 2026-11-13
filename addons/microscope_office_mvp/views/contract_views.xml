@@ -1,0 +1,51 @@
+<odoo>
+    <record id="view_contract_list" model="ir.ui.view">
+        <field name="name">mops.contract.list</field><field name="model">mops.contract</field>
+        <field name="arch" type="xml">
+            <list decoration-success="state == 'active'" decoration-muted="state in ('expired', 'cancelled')">
+                <field name="name"/><field name="title"/><field name="partner_id"/><field name="responsible_user_id"/>
+                <field name="date_start"/><field name="date_end"/><field name="state" widget="badge"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_contract_form" model="ir.ui.view">
+        <field name="name">mops.contract.form</field><field name="model">mops.contract</field>
+        <field name="arch" type="xml">
+            <form string="采购合同">
+                <header>
+                    <button name="action_new_rfq" type="object" string="新建询价" groups="microscope_office_mvp.group_procurement"/>
+                    <button name="action_activate" type="object" string="确认生效" class="btn-primary" groups="microscope_office_mvp.group_manager" invisible="state != 'draft'"/>
+                    <button name="action_expire" type="object" string="标记到期" groups="microscope_office_mvp.group_manager" invisible="state != 'active'"/>
+                    <button name="action_cancel" type="object" string="取消合同" groups="microscope_office_mvp.group_manager" invisible="state not in ('draft', 'active')" confirm="确认取消此合同？"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,active,expired"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_purchase_orders" type="object" class="oe_stat_button" icon="fa-shopping-cart" aria-label="查看合同关联采购单">
+                            <field name="purchase_order_count" widget="statinfo" string="采购单"/>
+                        </button>
+                    </div>
+                    <div class="oe_title"><h1><field name="name" readonly="state != 'draft'"/></h1><h2><field name="title" placeholder="例如：模拟高数值孔径物镜采购合同" readonly="state != 'draft'"/></h2></div>
+                    <group>
+                        <group><field name="partner_id" readonly="state != 'draft'"/><field name="responsible_user_id" readonly="state != 'draft'"/><field name="company_id" groups="base.group_multi_company" readonly="state != 'draft'"/></group>
+                        <group><field name="date_start" readonly="state != 'draft'"/><field name="date_end" readonly="state != 'draft'"/></group>
+                    </group>
+                    <notebook>
+                        <page string="正文与附件"><field name="document_text" nolabel="1" readonly="state != 'draft'" placeholder="录入合同元数据和模拟条款。"/><group><field name="document_file" filename="document_filename" readonly="state != 'draft'"/><field name="document_filename" invisible="1"/></group></page>
+                        <page string="关联采购"><field name="purchase_order_ids" readonly="1"><list><field name="name"/><field name="partner_id"/><field name="date_order"/><field name="amount_total"/><field name="state"/></list></field></page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="view_contract_search" model="ir.ui.view">
+        <field name="name">mops.contract.search</field><field name="model">mops.contract</field>
+        <field name="arch" type="xml"><search><field name="name"/><field name="title"/><field name="partner_id"/><filter name="active" string="生效合同" domain="[('state','=','active')]"/><group><filter name="by_partner" string="合同方" context="{'group_by':'partner_id'}"/></group></search></field>
+    </record>
+    <record id="action_contracts" model="ir.actions.act_window">
+        <field name="name">采购合同</field><field name="res_model">mops.contract</field><field name="view_mode">list,form</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">登记合同并在询价单中建立关联</p><p>同一合同可以关联多张采购单，合同方与公司必须一致。</p></field>
+    </record>
+</odoo>

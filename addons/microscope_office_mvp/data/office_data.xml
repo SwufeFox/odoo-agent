@@ -1,0 +1,7 @@
+<odoo noupdate="1">
+    <record id="project_meeting_actions" model="project.project">
+        <field name="name">会议任务</field>
+        <field name="company_id" ref="base.main_company"/>
+        <field name="privacy_visibility">employees</field>
+    </record>
+</odoo>

@@ -1,0 +1,43 @@
+name: microscope-office-mvp
+services:
+  db:
+    image: postgres:17.12-bookworm
+    environment:
+      POSTGRES_DB: mops_demo
+      POSTGRES_USER: mops
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Run python scripts/prepare_env.py first}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U mops -d mops_demo]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+  odoo:
+    build: .
+    environment:
+      DB_HOST: db
+      DB_PORT: '5432'
+      DB_NAME: mops_demo
+      DB_USER: mops
+      DB_PASSWORD: ${DB_PASSWORD:?Run python scripts/prepare_env.py first}
+      ODOO_MASTER_PASSWORD: ${ODOO_MASTER_PASSWORD:?Run python scripts/prepare_env.py first}
+      MOPS_BASE_URL: http://127.0.0.1:${ODOO_PORT:-8069}
+    ports:
+      - 127.0.0.1:${ODOO_PORT:-8069}:8069
+    volumes:
+      - odoo_data:/var/lib/odoo
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, curl, --fail, --silent, http://127.0.0.1:8069/web/health]
+      interval: 15s
+      timeout: 10s
+      start_period: 120s
+      retries: 12
+    restart: unless-stopped
+volumes:
+  pg_data:
+  odoo_data:

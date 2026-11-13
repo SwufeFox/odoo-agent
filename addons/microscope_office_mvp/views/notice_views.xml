@@ -1,0 +1,50 @@
+<odoo>
+    <record id="view_notice_list" model="ir.ui.view">
+        <field name="name">mops.notice.list</field><field name="model">mops.notice</field>
+        <field name="arch" type="xml"><list decoration-muted="state == 'archived'" decoration-bf="state == 'published' and not is_read"><field name="is_read"/><field name="name"/><field name="audience"/><field name="publisher_id"/><field name="published_at"/><field name="state" widget="badge"/><field name="read_count" groups="microscope_office_mvp.group_manager" optional="show"/><field name="company_id" groups="base.group_multi_company"/></list></field>
+    </record>
+    <record id="view_notice_form" model="ir.ui.view">
+        <field name="name">mops.notice.form</field><field name="model">mops.notice</field>
+        <field name="arch" type="xml">
+            <form string="内部公告">
+                <header>
+                    <button name="action_publish" type="object" string="发布公告" class="btn-primary" groups="microscope_office_mvp.group_manager" invisible="state != 'draft'" confirm="确认向所选员工发布此公告？"/>
+                    <button name="action_archive" type="object" string="归档公告" groups="microscope_office_mvp.group_manager" invisible="state != 'published'"/>
+                    <button name="action_mark_read" type="object" string="确认已读" class="btn-primary" invisible="state != 'published' or is_read"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,published,archived"/>
+                </header>
+                <sheet>
+                    <field name="is_read" invisible="1"/>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_reads" type="object" class="oe_stat_button" icon="fa-check-square-o" groups="microscope_office_mvp.group_manager" invisible="state == 'draft'" aria-label="查看公告阅读回执">
+                            <field name="read_count" widget="statinfo" string="已读人数"/>
+                        </button>
+                    </div>
+                    <div class="alert alert-success" role="status" aria-live="polite" invisible="not is_read or state != 'published'">您的阅读确认已记录。</div>
+                    <div class="oe_title"><h1><field name="name" placeholder="公告标题" readonly="state != 'draft'"/></h1></div>
+                    <group>
+                        <group><field name="audience" readonly="state != 'draft'"/><field name="recipient_ids" widget="many2many_tags" invisible="audience != 'selected'" required="audience == 'selected'" readonly="state != 'draft'"/><field name="company_id" groups="base.group_multi_company" readonly="state != 'draft'"/></group>
+                        <group><field name="publisher_id" readonly="1"/><field name="published_at" readonly="1"/></group>
+                        <group invisible="not is_read"><field name="my_read_at" readonly="1"/></group>
+                    </group>
+                    <field name="body" widget="html" nolabel="1" readonly="state != 'draft'" placeholder="写明事项、适用员工与执行时间。"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_notice_search" model="ir.ui.view">
+        <field name="name">mops.notice.search</field><field name="model">mops.notice</field>
+        <field name="arch" type="xml"><search><field name="name"/><filter name="unread" string="未读公告" domain="[('state','=','published'), ('read_ids', 'not any', [('user_id','=',uid)])]"/><filter name="published" string="已发布" domain="[('state','=','published')]"/><filter name="draft" string="草稿" domain="[('state','=','draft')]" groups="microscope_office_mvp.group_manager"/></search></field>
+    </record>
+    <record id="action_notices" model="ir.actions.act_window">
+        <field name="name">内部公告</field><field name="res_model">mops.notice</field><field name="view_mode">list,form</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">公告发布后在这里查看</p><p>负责人可以创建公告并选择全体员工或指定接收人。</p></field>
+    </record>
+    <record id="view_notice_read_list" model="ir.ui.view">
+        <field name="name">mops.notice.read.list</field><field name="model">mops.notice.read</field>
+        <field name="arch" type="xml"><list create="0" edit="0" delete="0"><field name="notice_id"/><field name="user_id"/><field name="read_at"/><field name="company_id" groups="base.group_multi_company"/></list></field>
+    </record>
+    <record id="action_notice_receipts" model="ir.actions.act_window">
+        <field name="name">公告阅读回执</field><field name="res_model">mops.notice.read</field><field name="view_mode">list</field>
+    </record>
+</odoo>

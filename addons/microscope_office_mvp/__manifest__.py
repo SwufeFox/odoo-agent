@@ -1,0 +1,23 @@
+{
+    'name': '显微镜企业办公',
+    'summary': '采购合同、会议行动项、内部公告与受控会议草稿助手',
+    'version': '20.0.1.1.0',
+    'category': 'Productivity',
+    'license': 'LGPL-3',
+    'author': 'Magixyne',
+    'depends': ['contacts', 'purchase', 'project', 'hr', 'mail'],
+    'data': [
+        'security/security.xml',
+        'security/ir.access.csv',
+        'data/sequences.xml',
+        'data/office_data.xml',
+        'views/contract_views.xml',
+        'views/purchase_views.xml',
+        'views/meeting_views.xml',
+        'views/task_views.xml',
+        'views/notice_views.xml',
+        'views/menu.xml',
+    ],
+    'application': True,
+    'installable': True,
+}
